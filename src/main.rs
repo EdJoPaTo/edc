@@ -15,6 +15,12 @@ fn main() {
             let strip = matches.is_present("strip");
             let input_files = get_input_files(&matches);
 
+            let resize = if matches.is_present("resize") {
+                matches.value_of("resize size")
+            } else {
+                None
+            };
+
             let mut result = Vec::new();
             for file in input_files {
                 let output = output_path::parse(file, "jpg").expect("failed to create output path");
@@ -33,7 +39,10 @@ fn main() {
                     command.arg("-strip");
                 }
 
-                // TODO: -resize '2000x1000>'
+                if let Some(resize) = resize {
+                    command.arg("-resize");
+                    command.arg(resize);
+                }
 
                 command.args(&["-quality", "85"]);
                 command.arg(&output);

@@ -28,6 +28,18 @@ pub fn build() -> App<'static, 'static> {
                 .visible_aliases(&["jpg", "image"])
                 .about("jpg - Converts towards photos with many colors and without transparency")
                 .arg(&strip)
+                .arg(
+                    Arg::with_name("resize")
+                        .short("r")
+                        .long("resize")
+                        .help("Resize the image to fit inside an area. See --resize-size to change the default area"),
+                )
+                .arg(
+                    Arg::with_name("resize size")
+                        .long("resize-size")
+                        .default_value("2000x1000>")
+                        .help("Resize the image to fit inside a given area.\nhttps://imagemagick.org/script/command-line-options.php#resize"),
+                )
                 .arg(&input_files),
         )
         .subcommand(
