@@ -11,7 +11,7 @@ pub fn build() -> App<'static, 'static> {
         .long("strip")
         .help("Strip the file of metadata");
 
-    App::new("emc")
+    App::new("EdC - EdJoPaTos Converter")
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))

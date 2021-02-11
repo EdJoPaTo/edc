@@ -115,25 +115,25 @@ jobs:
         if: runner.os == 'Linux' || runner.os == 'macOS'
         uses: actions/upload-artifact@v2
         with:
-          name: emc-${{ matrix.config.triple }}
-          path: target/${{ matrix.config.triple }}/release/emc
+          name: edc-${{ matrix.config.triple }}
+          path: target/${{ matrix.config.triple }}/release/edc
       - name: Upload Artifact (windows)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v2
         with:
-          name: emc-${{ matrix.config.triple }}
-          path: target/${{ matrix.config.triple }}/release/emc.exe
+          name: edc-${{ matrix.config.triple }}
+          path: target/${{ matrix.config.triple }}/release/edc.exe
 
       - name: Pack release (linux, mac)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
           rm -f *.tar.gz
-          tar -czf emc-${{ matrix.config.triple }}.tar.gz -C target/${{ matrix.config.triple }}/release emc
+          tar -czf edc-${{ matrix.config.triple }}.tar.gz -C target/${{ matrix.config.triple }}/release edc
       - name: Pack release (windows)
         if: runner.os == 'Windows'
         run: |
           del *.zip
-          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.config.triple }}/release/emc.exe -DestinationPath emc-${{ matrix.config.triple }}.zip
+          Compress-Archive -CompressionLevel Optimal -Force -Path target/${{ matrix.config.triple }}/release/edc.exe -DestinationPath edc-${{ matrix.config.triple }}.zip
 
       - name: GH Release
         if: startsWith(github.ref, 'refs/tags/')

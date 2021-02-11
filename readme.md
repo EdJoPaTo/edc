@@ -1,6 +1,6 @@
-# EMC - EdJoPaTos Media Converter
+# EdC - EdJoPaTos Converter
 
-This tool helps with converting media from one format to another or compressing it.
+> A tool helping with converting or compressing media
 
 There are already a bunch of tools out there doing exactly what it needed.
 Remembering their command line can be annoying.
@@ -28,7 +28,7 @@ I dont want to keep the metadata like location information (`--strip`) and have 
 The input file shouldnt be overriden as I want to keep the original (which is also done by default).
 
 ```sh
-emc photo --dry-run --strip IMG_42.heic IMG_1337.heic
+edc photo --dry-run --strip IMG_42.heic IMG_1337.heic
 ```
 
 Running this with `--dry-run` shows just the script that would be run.
