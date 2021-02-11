@@ -8,6 +8,7 @@ pub fn build() -> App<'static, 'static> {
         .help("Files to be converted");
 
     let strip = Arg::with_name("strip")
+        .short("s")
         .long("strip")
         .help("Strip the file of metadata");
 
