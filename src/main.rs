@@ -24,11 +24,7 @@ fn main() {
             let mut result = Vec::new();
             for file in input_files {
                 let output = output_path::parse(file, "jpg").expect("failed to create output path");
-                let mkdir = output_path::create_folder_for_file_path_command(Path::new(&output))
-                    .expect("failed to create output path folder command");
-                if !result.contains(&mkdir) {
-                    result.push(mkdir);
-                }
+                create_and_add_output_mkdir(&mut result, &output);
 
                 let mut command = Command::new("convert");
                 command.arg(file.to_str().unwrap());
@@ -60,11 +56,7 @@ fn main() {
             let mut result = Vec::new();
             for file in input_files {
                 let output = output_path::parse(file, "png").expect("failed to create output path");
-                let mkdir = output_path::create_folder_for_file_path_command(Path::new(&output))
-                    .expect("failed to create output path folder command");
-                if !result.contains(&mkdir) {
-                    result.push(mkdir);
-                }
+                create_and_add_output_mkdir(&mut result, &output);
 
                 let mut command = Command::new("oxipng");
 
@@ -137,4 +129,12 @@ fn get_input_files<'a>(matches: &'a clap::ArgMatches) -> Vec<&'a Path> {
     }
 
     result
+}
+
+fn create_and_add_output_mkdir(commands: &mut Vec<Command>, output_file: &str) {
+    let mkdir = output_path::create_folder_for_file_path_command(Path::new(&output_file))
+        .expect("failed to create output path folder command");
+    if !commands.contains(&mkdir) {
+        commands.push(mkdir);
+    }
 }
