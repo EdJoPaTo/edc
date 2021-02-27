@@ -125,6 +125,18 @@ fn get_input_files<'a>(matches: &'a clap::ArgMatches) -> Vec<&'a Path> {
             panic!("A file needs to be a valid existing file: {}", file);
         }
 
+        match path.to_str() {
+            Some(path) => {
+                if path.contains("../") {
+                    panic!(
+                        "paths need to be relative below the work directory: {}",
+                        file
+                    );
+                }
+            }
+            None => panic!("only valid utf8 paths are supported: {}", file),
+        }
+
         result.push(path);
     }
 
