@@ -55,4 +55,22 @@ pub fn build() -> App<'static, 'static> {
                 )
                 .arg(&input_files),
         )
+        .subcommand(
+            SubCommand::with_name("sound")
+                .visible_aliases(&["mp3"])
+                .about("mp3 - extract or convert to mp3")
+                .arg(&input_files),
+        )
+        .subcommand(
+            SubCommand::with_name("video")
+                .visible_aliases(&["mp4"])
+                .about("mp4 - convert to mp4 video")
+                .arg(&input_files),
+        )
+        .subcommand(
+            SubCommand::with_name("gif-ish")
+                .aliases(&["gifish", "gif"]) // alias gif might later change to create real gif files
+                .about("mp4 - extract or convert to mp4 videos without sound")
+                .arg(&input_files),
+        )
 }

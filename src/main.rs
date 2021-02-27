@@ -8,6 +8,7 @@ mod cli;
 mod command;
 mod output_path;
 
+#[allow(clippy::too_many_lines)]
 fn main() {
     let matches = cli::build().get_matches();
     let dry_run = matches.is_present("dry run");
@@ -72,6 +73,62 @@ fn main() {
 
                 command.arg(file.to_str().unwrap());
                 command.arg("--out");
+                command.arg(&output);
+
+                result.push(command);
+            }
+
+            result
+        }
+        ("sound", Some(matches)) => {
+            let mut result = Vec::new();
+            for file in get_input_files(&matches) {
+                let output = output_path::parse(file, "mp3").expect("failed to create output path");
+                create_and_add_output_mkdir(&mut result, &output);
+
+                let mut command = Command::new("ffmpeg");
+                command.args(&["-v", "error"]);
+                command.arg("-stats");
+                command.arg("-vn");
+                command.arg("-i");
+                command.arg(file.to_str().unwrap());
+                command.arg(&output);
+
+                result.push(command);
+            }
+
+            result
+        }
+        ("video", Some(matches)) => {
+            let mut result = Vec::new();
+            for file in get_input_files(&matches) {
+                let output = output_path::parse(file, "mp4").expect("failed to create output path");
+                create_and_add_output_mkdir(&mut result, &output);
+
+                let mut command = Command::new("ffmpeg");
+                command.args(&["-v", "error"]);
+                command.arg("-stats");
+                command.arg("-i");
+                command.arg(file.to_str().unwrap());
+                command.arg(&output);
+
+                result.push(command);
+            }
+
+            result
+        }
+        ("gif-ish", Some(matches)) => {
+            let mut result = Vec::new();
+            for file in get_input_files(&matches) {
+                let output = output_path::parse(file, "mp4").expect("failed to create output path");
+                create_and_add_output_mkdir(&mut result, &output);
+
+                let mut command = Command::new("ffmpeg");
+                command.args(&["-v", "error"]);
+                command.arg("-stats");
+                command.arg("-an");
+                command.arg("-i");
+                command.arg(file.to_str().unwrap());
                 command.arg(&output);
 
                 result.push(command);
