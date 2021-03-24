@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 use std::path::Path;
+use std::process::exit;
 
 use command::Command;
 
@@ -12,6 +13,16 @@ mod output_path;
 fn main() {
     let matches = cli::build().get_matches();
     let dry_run = matches.is_present("dry run");
+
+    if matches.subcommand_matches("versions").is_some() {
+        println!("Check versions of all tools used...");
+        check_version("convert", &["--version"]);
+        check_version("ffmpeg", &["-version"]);
+        check_version("mkdir", &["--version"]);
+        check_version("oxipng", &["--version"]);
+
+        exit(0);
+    }
 
     let commands = match matches.subcommand() {
         ("photo", Some(matches)) => {
@@ -207,5 +218,32 @@ fn create_and_add_output_mkdir(commands: &mut Vec<Command>, output_file: &str) {
         .expect("failed to create output path folder command");
     if !commands.contains(&mkdir) {
         commands.push(mkdir);
+    }
+}
+
+fn check_version(program: &str, args: &[&str]) {
+    println!("\n\ncheck {}...", program);
+    match std::process::Command::new(program).args(args).output() {
+        Ok(output) => {
+            if !output.status.success() {
+                println!("Statuscode: {}", output.status);
+            }
+
+            if !output.stdout.is_empty() {
+                match String::from_utf8(output.stdout) {
+                    Ok(stdout) => println!("{}", stdout),
+                    Err(err) => println!("Error parsing stdout: {}", err),
+                }
+            }
+
+            if !output.stderr.is_empty() {
+                match String::from_utf8(output.stderr) {
+                    Ok(stderr) => println!("{}", stderr),
+                    Err(err) => println!("Error parsing stderr: {}", err),
+                }
+            }
+        }
+
+        Err(err) => println!("Failed to check version: {}", err),
     }
 }

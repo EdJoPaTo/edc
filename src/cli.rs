@@ -25,6 +25,10 @@ pub fn build() -> App<'static, 'static> {
                 .help("dont execute any commands and print them to stdout"),
         )
         .subcommand(
+            SubCommand::with_name("versions")
+                .about("Show versions of tools which are used by this tool (and if they are there in the first place)"),
+        )
+        .subcommand(
             SubCommand::with_name("photo")
                 .visible_aliases(&["jpg", "image"])
                 .about("jpg - Converts towards photos with many colors and without transparency")
