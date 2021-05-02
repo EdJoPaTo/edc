@@ -66,6 +66,12 @@ pub fn build() -> App<'static, 'static> {
                 .arg(&input_files),
         )
         .subcommand(
+            SubCommand::with_name("opus")
+                .aliases(&["ogg"])
+                .about("ogg - extract or convert to opus encoded audio file")
+                .arg(&input_files),
+        )
+        .subcommand(
             SubCommand::with_name("video")
                 .visible_aliases(&["mp4"])
                 .about("mp4 - convert to mp4 video")

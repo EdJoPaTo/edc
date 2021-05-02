@@ -110,6 +110,26 @@ fn main() {
 
             result
         }
+        ("opus", Some(matches)) => {
+            let mut result = Vec::new();
+            for file in get_input_files(&matches) {
+                let output = output_path::parse(file, "ogg").expect("failed to create output path");
+                create_and_add_output_mkdir(&mut result, &output);
+
+                let mut command = Command::new("ffmpeg");
+                command.args(&["-v", "error"]);
+                command.arg("-stats");
+                command.arg("-vn");
+                command.arg("-i");
+                command.arg(file.to_str().unwrap());
+                command.args(&["-c:a", "libopus"]);
+                command.arg(&output);
+
+                result.push(command);
+            }
+
+            result
+        }
         ("video", Some(matches)) => {
             let mut result = Vec::new();
             for file in get_input_files(&matches) {
