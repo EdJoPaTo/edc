@@ -3,6 +3,7 @@ name = "edc"
 description = "A tool helping with converting or compressing media"
 version = "0.2.0"
 license = "MIT"
+repository = "https://github.com/EdJoPaTo/edc"
 authors = ["EdJoPaTo <edc-rust@edjopato.de>"]
 edition = "2018"
 
