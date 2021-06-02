@@ -1,5 +1,6 @@
 use clap::{App, AppSettings, Arg, SubCommand};
 
+#[must_use]
 pub fn build() -> App<'static, 'static> {
     let input_files = Arg::with_name("input files")
         .multiple(true)
