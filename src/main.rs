@@ -27,7 +27,7 @@ fn main() {
     let commands = match matches.subcommand() {
         ("photo", Some(matches)) => {
             let strip = matches.is_present("strip");
-            let input_files = get_input_files(&matches);
+            let input_files = get_input_files(matches);
 
             let resize = if matches.is_present("resize") {
                 matches.value_of("resize size")
@@ -65,7 +65,7 @@ fn main() {
         ("screenshot", Some(matches)) => {
             let pedantic = matches.is_present("pedantic");
             let strip = matches.is_present("strip");
-            let input_files = get_input_files(&matches);
+            let input_files = get_input_files(matches);
 
             let mut result = Vec::new();
             for file in input_files {
@@ -93,7 +93,7 @@ fn main() {
         }
         ("sound", Some(matches)) => {
             let mut result = Vec::new();
-            for file in get_input_files(&matches) {
+            for file in get_input_files(matches) {
                 let output = output_path::parse(file, "mp3").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -112,7 +112,7 @@ fn main() {
         }
         ("opus", Some(matches)) => {
             let mut result = Vec::new();
-            for file in get_input_files(&matches) {
+            for file in get_input_files(matches) {
                 let output = output_path::parse(file, "ogg").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -132,7 +132,7 @@ fn main() {
         }
         ("video", Some(matches)) => {
             let mut result = Vec::new();
-            for file in get_input_files(&matches) {
+            for file in get_input_files(matches) {
                 let output = output_path::parse(file, "mp4").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -150,7 +150,7 @@ fn main() {
         }
         ("gif-ish", Some(matches)) => {
             let mut result = Vec::new();
-            for file in get_input_files(&matches) {
+            for file in get_input_files(matches) {
                 let output = output_path::parse(file, "mp4").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 

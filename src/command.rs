@@ -28,10 +28,10 @@ impl Command {
 
         for arg in &self.args {
             if arg.contains(' ') {
-                line += &format!(" \"{}\"", arg);
+                line += &format!(r#" "{}""#, arg);
             } else {
                 line += " ";
-                line += &arg;
+                line += arg;
             }
         }
 
@@ -50,5 +50,5 @@ fn generates_command_line() {
     let mut command = Command::new("mkdir");
     command.arg("-p");
     command.arg("foo bar");
-    assert_eq!(command.to_command_line(), "mkdir -p \"foo bar\"")
+    assert_eq!(command.to_command_line(), r#"mkdir -p "foo bar""#);
 }
