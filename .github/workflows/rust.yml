@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Check stable on the main platforms and ensure there is not even a single warning
           - os: ubuntu-latest
             toolchain: stable
             clippyargs: -D clippy::pedantic -D warnings
@@ -20,21 +21,24 @@ jobs:
             toolchain: stable
             clippyargs: -D clippy::pedantic -D warnings
 
+          # Check future versions and maybe get some glances on soon to be lints
+          - os: ubuntu-latest
+            toolchain: beta
+            clippyargs: -W clippy::pedantic
           - os: ubuntu-latest
             toolchain: nightly
             clippyargs: -W clippy::pedantic
-          - os: ubuntu-latest
-            toolchain: 1.41.1 # Debian 10 Buster
-            clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
-          - os: ubuntu-latest
-            toolchain: 1.47.0 # Alpine 3.13
-            clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
+
+          # Check if it is still running on older Rust versions.
+          # Sometimes they dont have lint bugfixes which results in false positives -> Dont error, just warn.
+          # Also some specified lints are not yet existing in the older rust version -> allow unknown lints.
           - os: ubuntu-latest
             toolchain: 1.48.0 # Debian 11 Bullseye
-            clippyargs: -W clippy::pedantic -A unknown-lints -A clippy::unknown-clippy-lints
+            clippyargs: -A unknown-lints -A clippy::unknown-clippy-lints
+          - os: ubuntu-latest
+            toolchain: 1.52.0 # Alpine 3.14
+            clippyargs: -A unknown-lints
     steps:
-      - uses: actions/checkout@v2
-
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -42,6 +46,8 @@ jobs:
           override: true
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
+
+      - uses: actions/checkout@v2
 
       - name: Run clippy
         uses: actions-rs/cargo@v1
@@ -55,7 +61,7 @@ jobs:
           command: test
           args: --verbose --locked --all-features
 
-  release:
+  github-release:
     name: Release ${{ matrix.triple }}
     runs-on: ${{ matrix.os }}
     needs: test
@@ -71,12 +77,20 @@ jobs:
             triple: armv7-unknown-linux-gnueabihf
           - os: ubuntu-latest
             triple: aarch64-unknown-linux-gnu
+
           - os: macOS-latest
             triple: x86_64-apple-darwin
           - os: macOS-latest
             triple: aarch64-apple-darwin
-
     steps:
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          profile: minimal
+          target: ${{ matrix.triple }}
+          toolchain: stable
+
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -92,15 +106,7 @@ jobs:
           echo "artifact name is: $name"
           echo "ARTIFACT_NAME=$name" >> $GITHUB_ENV
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          override: true
-          profile: minimal
-          target: ${{ matrix.triple }}
-          toolchain: stable
-
-      - name: Build release
+      - name: Build
         uses: actions-rs/cargo@v1
         env:
           # TODO: Remove this once it's the default
@@ -110,16 +116,16 @@ jobs:
           args: --release --verbose --locked --all-features --target ${{ matrix.triple }}
           use-cross: ${{ runner.os == 'Linux' && matrix.triple != 'x86_64-unknown-linux-gnu' }}
 
-      - name: Pack release (-nix)
+      - name: Package (-nix)
         if: runner.os != 'Windows'
         run: >
           tar --gzip -cvf ${{ env.ARTIFACT_NAME }}.tar.gz
-          completions LICENSE
+          completions LICENSE README.md
           -C target/${{ matrix.triple }}/release edc
-      - name: Pack release (windows)
+      - name: Package (windows)
         if: runner.os == 'Windows'
         run: |
-          7z a ${{ env.ARTIFACT_NAME }}.zip completions LICENSE
+          7z a ${{ env.ARTIFACT_NAME }}.zip completions LICENSE README.md
           cd target/${{ matrix.triple }}/release
           7z a ../../../${{ env.ARTIFACT_NAME }}.zip edc.exe
           cd -
@@ -132,13 +138,10 @@ jobs:
             *.zip
             *.tar.gz
 
-      - name: GH Release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
           files: |
             *.zip
             *.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
