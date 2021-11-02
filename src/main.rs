@@ -14,18 +14,16 @@ fn main() {
     let matches = cli::build().get_matches();
     let dry_run = matches.is_present("dry run");
 
-    if matches.subcommand_matches("versions").is_some() {
-        println!("Check versions of all tools used...");
-        check_version("convert", &["--version"]);
-        check_version("ffmpeg", &["-version"]);
-        check_version("mkdir", &["--version"]);
-        check_version("oxipng", &["--version"]);
-
-        exit(0);
-    }
-
-    let commands = match matches.subcommand() {
-        ("photo", Some(matches)) => {
+    let commands = match matches.subcommand().expect("expected a subcommand") {
+        ("versions", _) => {
+            println!("Check versions of all tools used...");
+            check_version("convert", &["--version"]);
+            check_version("ffmpeg", &["-version"]);
+            check_version("mkdir", &["--version"]);
+            check_version("oxipng", &["--version"]);
+            exit(0);
+        }
+        ("photo", matches) => {
             let strip = matches.is_present("strip");
             let input_files = get_input_files(matches);
 
@@ -62,7 +60,7 @@ fn main() {
 
             result
         }
-        ("screenshot", Some(matches)) => {
+        ("screenshot", matches) => {
             let pedantic = matches.is_present("pedantic");
             let strip = matches.is_present("strip");
             let input_files = get_input_files(matches);
@@ -91,7 +89,7 @@ fn main() {
 
             result
         }
-        ("sound", Some(matches)) => {
+        ("sound", matches) => {
             let mut result = Vec::new();
             for file in get_input_files(matches) {
                 let output = output_path::parse(file, "mp3").expect("failed to create output path");
@@ -110,7 +108,7 @@ fn main() {
 
             result
         }
-        ("opus", Some(matches)) => {
+        ("opus", matches) => {
             let mut result = Vec::new();
             for file in get_input_files(matches) {
                 let output = output_path::parse(file, "ogg").expect("failed to create output path");
@@ -130,7 +128,7 @@ fn main() {
 
             result
         }
-        ("video", Some(matches)) => {
+        ("video", matches) => {
             let mut result = Vec::new();
             for file in get_input_files(matches) {
                 let output = output_path::parse(file, "mp4").expect("failed to create output path");
@@ -148,7 +146,7 @@ fn main() {
 
             result
         }
-        ("gif-ish", Some(matches)) => {
+        ("gif-ish", matches) => {
             let mut result = Vec::new();
             for file in get_input_files(matches) {
                 let output = output_path::parse(file, "mp4").expect("failed to create output path");
@@ -167,11 +165,10 @@ fn main() {
 
             result
         }
-        (name, Some(matches)) => {
+        (name, matches) => {
             println!("Args: {:?}\n", matches);
             todo!("output target {}", name);
         }
-        _ => panic!("requires subcommand"),
     };
 
     if dry_run {
@@ -197,7 +194,7 @@ fn main() {
     }
 }
 
-fn get_input_files<'a>(matches: &'a clap::ArgMatches) -> Vec<&'a Path> {
+fn get_input_files(matches: &clap::ArgMatches) -> Vec<&Path> {
     let strings = matches
         .values_of("input files")
         .expect("couldnt read input files from command line")
