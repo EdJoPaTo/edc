@@ -195,39 +195,11 @@ fn main() {
 }
 
 fn get_input_files(matches: &clap::ArgMatches) -> Vec<&Path> {
-    let strings = matches
+    matches
         .values_of("input files")
         .expect("couldnt read input files from command line")
-        .collect::<Vec<_>>();
-
-    let mut result = Vec::new();
-    for file in strings {
-        let path = Path::new(file);
-
-        if path.is_absolute() {
-            panic!("Absolute path is not supported: {}", file);
-        }
-
-        if !path.is_file() {
-            panic!("A file needs to be a valid existing file: {}", file);
-        }
-
-        match path.to_str() {
-            Some(path) => {
-                if path.contains("../") {
-                    panic!(
-                        "paths need to be relative below the work directory: {}",
-                        file
-                    );
-                }
-            }
-            None => panic!("only valid utf8 paths are supported: {}", file),
-        }
-
-        result.push(path);
-    }
-
-    result
+        .map(Path::new)
+        .collect()
 }
 
 fn create_and_add_output_mkdir(commands: &mut Vec<Command>, output_file: &str) {
