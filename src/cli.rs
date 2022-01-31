@@ -7,12 +7,12 @@ pub fn build() -> App<'static> {
         .required(true)
         .validator(validate_input_file)
         .value_name("FILE")
-        .about("Files to be converted");
+        .help("Files to be converted");
 
     let strip = Arg::new("strip")
         .short('s')
         .long("strip")
-        .about("Strip the file of metadata");
+        .help("Strip the file of metadata");
 
     app_from_crate!()
         .name("EdC - EdJoPaTos Converter")
@@ -21,7 +21,7 @@ pub fn build() -> App<'static> {
             Arg::new("dry run")
                 .long("dry-run")
                 .global(true)
-                .about("dont execute any commands and print them to stdout"),
+                .help("dont execute any commands and print them to stdout"),
         )
         .subcommand(
             App::new("versions")
@@ -36,13 +36,13 @@ pub fn build() -> App<'static> {
                     Arg::new("resize")
                         .short('r')
                         .long("resize")
-                        .about("Resize the image to fit inside an area. See --resize-size to change the default area"),
+                        .help("Resize the image to fit inside an area. See --resize-size to change the default area"),
                 )
                 .arg(
                     Arg::new("resize size")
                         .long("resize-size")
                         .default_value("2000x1000>")
-                        .about("Resize the image to fit inside a given area.\nhttps://imagemagick.org/script/command-line-options.php#resize"),
+                        .help("Resize the image to fit inside a given area.\nhttps://imagemagick.org/script/command-line-options.php#resize"),
                 )
                 .arg(&input_files),
         )
@@ -54,7 +54,7 @@ pub fn build() -> App<'static> {
                 .arg(
                     Arg::new("pedantic")
                         .long("pedantic")
-                        .about("take considerably more effort to get small file size"),
+                        .help("take considerably more effort to get small file size"),
                 )
                 .arg(&input_files),
         )
@@ -111,4 +111,9 @@ fn validate_input_file(file: &str) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+#[test]
+fn verify_app() {
+    build().debug_assert();
 }
