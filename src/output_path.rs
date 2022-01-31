@@ -3,18 +3,15 @@ use std::path::Path;
 use crate::command::Command;
 
 pub fn parse(input: &Path, extension: &str) -> Option<String> {
+    let output_folder = input
+        .parent()
+        .and_then(Path::to_str)
+        .filter(|s| !s.is_empty())
+        .map_or_else(
+            || String::from("converted"),
+            |parent| format!("converted/{}", parent),
+        );
     let basename = input.file_stem()?.to_str()?;
-
-    let output_folder = if let Some(parent) = input.parent().map(|o| o.to_str().unwrap()) {
-        if parent.is_empty() {
-            String::from("converted")
-        } else {
-            format!("converted/{}", parent)
-        }
-    } else {
-        String::from("converted")
-    };
-
     Some(format!("{}/{}.{}", output_folder, basename, extension))
 }
 

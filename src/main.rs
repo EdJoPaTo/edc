@@ -194,12 +194,11 @@ fn main() {
     }
 }
 
-fn get_input_files(matches: &clap::ArgMatches) -> Vec<&Path> {
+fn get_input_files(matches: &clap::ArgMatches) -> impl Iterator<Item = &Path> {
     matches
         .values_of("input files")
         .expect("couldnt read input files from command line")
         .map(Path::new)
-        .collect()
 }
 
 fn create_and_add_output_mkdir(commands: &mut Vec<Command>, output_file: &str) {
