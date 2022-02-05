@@ -1,12 +1,13 @@
-use clap::{app_from_crate, App, AppSettings, Arg};
+use clap::{app_from_crate, App, AppSettings, ValueHint, Arg};
 
 #[must_use]
 pub fn build() -> App<'static> {
     let input_files = Arg::new("input files")
+        .value_name("FILE")
+        .value_hint(ValueHint::FilePath)
+        .validator(validate_input_file)
         .multiple_values(true)
         .required(true)
-        .validator(validate_input_file)
-        .value_name("FILE")
         .help("Files to be converted");
 
     let strip = Arg::new("strip")
@@ -42,6 +43,8 @@ pub fn build() -> App<'static> {
                     Arg::new("resize size")
                         .long("resize-size")
                         .default_value("2000x1000>")
+                        .value_hint(ValueHint::Other)
+                        .takes_value(true)
                         .help("Resize the image to fit inside a given area.\nhttps://imagemagick.org/script/command-line-options.php#resize"),
                 )
                 .arg(&input_files),
