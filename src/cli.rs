@@ -1,7 +1,8 @@
-use clap::{app_from_crate, App, AppSettings, ValueHint, Arg};
+use clap::{command, Arg, Command, ValueHint};
 
+#[allow(clippy::too_many_lines)]
 #[must_use]
-pub fn build() -> App<'static> {
+pub fn build() -> Command<'static> {
     let input_files = Arg::new("input files")
         .value_name("FILE")
         .value_hint(ValueHint::FilePath)
@@ -15,9 +16,9 @@ pub fn build() -> App<'static> {
         .long("strip")
         .help("Strip the file of metadata");
 
-    app_from_crate!()
+    command!()
         .name("EdC - EdJoPaTos Converter")
-        .setting(AppSettings::SubcommandRequired)
+        .subcommand_required(true)
         .arg(
             Arg::new("dry run")
                 .long("dry-run")
@@ -25,11 +26,11 @@ pub fn build() -> App<'static> {
                 .help("dont execute any commands and print them to stdout"),
         )
         .subcommand(
-            App::new("versions")
+            Command::new("versions")
                 .about("Show versions of tools which are used by this tool (and if they are there in the first place)"),
         )
         .subcommand(
-            App::new("photo")
+            Command::new("photo")
                 .visible_aliases(&["jpg", "image"])
                 .about("jpg - Converts towards photos with many colors and without transparency")
                 .arg(&strip)
@@ -50,7 +51,7 @@ pub fn build() -> App<'static> {
                 .arg(&input_files),
         )
         .subcommand(
-            App::new("screenshot")
+            Command::new("screenshot")
                 .visible_aliases(&["png"])
                 .about("png - Compresses pngs")
                 .arg(&strip)
@@ -62,25 +63,25 @@ pub fn build() -> App<'static> {
                 .arg(&input_files),
         )
         .subcommand(
-            App::new("sound")
+            Command::new("sound")
                 .visible_aliases(&["mp3"])
                 .about("mp3 - extract or convert to mp3")
                 .arg(&input_files),
         )
         .subcommand(
-            App::new("opus")
+            Command::new("opus")
                 .aliases(&["ogg"])
                 .about("ogg - extract or convert to opus encoded audio file")
                 .arg(&input_files),
         )
         .subcommand(
-            App::new("video")
+            Command::new("video")
                 .visible_aliases(&["mp4"])
                 .about("mp4 - convert to mp4 video")
                 .arg(&input_files),
         )
         .subcommand(
-            App::new("gif-ish")
+            Command::new("gif-ish")
                 .aliases(&["gifish", "gif"]) // alias gif might later change to create real gif files
                 .about("mp4 - extract or convert to mp4 videos without sound")
                 .arg(&input_files),
@@ -117,6 +118,6 @@ fn validate_input_file(file: &str) -> Result<(), String> {
 }
 
 #[test]
-fn verify_app() {
+fn verify() {
     build().debug_assert();
 }
