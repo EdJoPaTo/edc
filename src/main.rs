@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::exit;
 
 use command::Command;
@@ -12,7 +12,7 @@ mod output_path;
 #[allow(clippy::too_many_lines)]
 fn main() {
     let matches = cli::build().get_matches();
-    let dry_run = matches.is_present("dry run");
+    let dry_run = matches.contains_id("dry run");
 
     let commands = match matches.subcommand().expect("expected a subcommand") {
         ("versions", _) => {
@@ -24,11 +24,11 @@ fn main() {
             exit(0);
         }
         ("photo", matches) => {
-            let strip = matches.is_present("strip");
+            let strip = matches.contains_id("strip");
             let input_files = get_input_files(matches);
 
-            let resize = if matches.is_present("resize") {
-                matches.value_of("resize size")
+            let resize = if matches.contains_id("resize") {
+                matches.get_one::<String>("resize size")
             } else {
                 None
             };
@@ -61,8 +61,8 @@ fn main() {
             result
         }
         ("screenshot", matches) => {
-            let pedantic = matches.is_present("pedantic");
-            let strip = matches.is_present("strip");
+            let pedantic = matches.contains_id("pedantic");
+            let strip = matches.contains_id("strip");
             let input_files = get_input_files(matches);
 
             let mut result = Vec::new();
@@ -194,11 +194,40 @@ fn main() {
     }
 }
 
-fn get_input_files(matches: &clap::ArgMatches) -> impl Iterator<Item = &Path> {
-    matches
-        .values_of("input files")
+fn get_input_files(matches: &clap::ArgMatches) -> Vec<&PathBuf> {
+    let all = matches
+        .get_many::<PathBuf>("input files")
         .expect("couldnt read input files from command line")
-        .map(Path::new)
+        .collect::<Vec<_>>();
+    for path in &all {
+        check_input_file(path);
+    }
+    all
+}
+
+fn check_input_file(path: &PathBuf) {
+    assert!(
+        !path.is_absolute(),
+        "Absolute path is not supported: {:?}",
+        path
+    );
+
+    assert!(
+        path.is_file(),
+        "Input file needs to be a valid existing file: {:?}",
+        path
+    );
+
+    match path.to_str() {
+        Some(path) => {
+            assert!(
+                !path.contains("../"),
+                "Paths need to be relative below the work directory: {:?}",
+                path
+            );
+        }
+        None => panic!("Only valid utf8 paths are supported: {:?}", path),
+    }
 }
 
 fn create_and_add_output_mkdir(commands: &mut Vec<Command>, output_file: &str) {

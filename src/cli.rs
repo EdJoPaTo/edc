@@ -1,3 +1,4 @@
+use clap::builder::ValueParser;
 use clap::{command, Arg, Command, ValueHint};
 
 #[allow(clippy::too_many_lines)]
@@ -6,7 +7,7 @@ pub fn build() -> Command<'static> {
     let input_files = Arg::new("input files")
         .value_name("FILE")
         .value_hint(ValueHint::FilePath)
-        .validator(validate_input_file)
+        .value_parser(ValueParser::path_buf())
         .multiple_values(true)
         .required(true)
         .help("Files to be converted");
@@ -86,35 +87,6 @@ pub fn build() -> Command<'static> {
                 .about("mp4 - extract or convert to mp4 videos without sound")
                 .arg(&input_files),
         )
-}
-
-fn validate_input_file(file: &str) -> Result<(), String> {
-    let path = std::path::Path::new(file);
-
-    if path.is_absolute() {
-        return Err(format!("Absolute path is not supported: {}", file));
-    }
-
-    if !path.is_file() {
-        return Err(format!(
-            "Input file needs to be a valid existing file: {}",
-            file
-        ));
-    }
-
-    match path.to_str() {
-        Some(path) => {
-            if path.contains("../") {
-                return Err(format!(
-                    "Paths need to be relative below the work directory: {}",
-                    file
-                ));
-            }
-        }
-        None => return Err(format!("Only valid utf8 paths are supported: {}", file)),
-    }
-
-    Ok(())
 }
 
 #[test]
