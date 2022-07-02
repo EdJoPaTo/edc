@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Command {
     program: String,
     args: Vec<String>,
@@ -28,7 +28,9 @@ impl Command {
 
         for arg in &self.args {
             if arg.contains(' ') {
-                line += &format!(r#" "{}""#, arg);
+                line += " \"";
+                line += arg;
+                line += "\"";
             } else {
                 line += " ";
                 line += arg;
