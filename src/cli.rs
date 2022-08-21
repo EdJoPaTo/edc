@@ -1,95 +1,98 @@
-use clap::builder::ValueParser;
-use clap::{command, Arg, Command, ValueHint};
+use std::path::PathBuf;
 
-#[allow(clippy::too_many_lines)]
-#[must_use]
-pub fn build() -> Command<'static> {
-    let input_files = Arg::new("input files")
-        .value_name("FILE")
-        .value_hint(ValueHint::FilePath)
-        .value_parser(ValueParser::path_buf())
-        .multiple_values(true)
-        .required(true)
-        .help("Files to be converted");
+use clap::{Parser, ValueHint};
 
-    let strip = Arg::new("strip")
-        .short('s')
-        .long("strip")
-        .help("Strip the file of metadata");
+#[derive(Debug, Parser)]
+#[clap(about, author, version, name = "EdC - EdJoPaTos Converter")]
+pub struct Cli {
+    #[clap(subcommand)]
+    pub subcommand: SubCommand,
 
-    command!()
-        .name("EdC - EdJoPaTos Converter")
-        .subcommand_required(true)
-        .arg(
-            Arg::new("dry run")
-                .long("dry-run")
-                .global(true)
-                .help("dont execute any commands and print them to stdout"),
-        )
-        .subcommand(
-            Command::new("versions")
-                .about("Show versions of tools which are used by this tool (and if they are there in the first place)"),
-        )
-        .subcommand(
-            Command::new("photo")
-                .visible_aliases(&["jpg", "image"])
-                .about("jpg - Converts towards photos with many colors and without transparency")
-                .arg(&strip)
-                .arg(
-                    Arg::new("resize")
-                        .short('r')
-                        .long("resize")
-                        .help("Resize the image to fit inside an area. See --resize-size to change the default area"),
-                )
-                .arg(
-                    Arg::new("resize size")
-                        .long("resize-size")
-                        .default_value("2000x1000>")
-                        .value_hint(ValueHint::Other)
-                        .takes_value(true)
-                        .help("Resize the image to fit inside a given area.\nhttps://imagemagick.org/script/command-line-options.php#resize"),
-                )
-                .arg(&input_files),
-        )
-        .subcommand(
-            Command::new("screenshot")
-                .visible_aliases(&["png"])
-                .about("png - Compresses pngs")
-                .arg(&strip)
-                .arg(
-                    Arg::new("pedantic")
-                        .long("pedantic")
-                        .help("take considerably more effort to get small file size"),
-                )
-                .arg(&input_files),
-        )
-        .subcommand(
-            Command::new("sound")
-                .visible_aliases(&["mp3"])
-                .about("mp3 - extract or convert to mp3")
-                .arg(&input_files),
-        )
-        .subcommand(
-            Command::new("opus")
-                .aliases(&["ogg"])
-                .about("ogg - extract or convert to opus encoded audio file")
-                .arg(&input_files),
-        )
-        .subcommand(
-            Command::new("video")
-                .visible_aliases(&["mp4"])
-                .about("mp4 - convert to mp4 video")
-                .arg(&input_files),
-        )
-        .subcommand(
-            Command::new("gif-ish")
-                .aliases(&["gifish", "gif"]) // alias gif might later change to create real gif files
-                .about("mp4 - extract or convert to mp4 videos without sound")
-                .arg(&input_files),
-        )
+    /// dont execute any commands and print them to stdout
+    #[clap(long, global = true)]
+    pub dry_run: bool,
+}
+
+#[derive(Debug, Parser)]
+pub enum SubCommand {
+    /// Show versions of tools which are used by this tool (and if they are there in the first place)
+    Versions,
+
+    /// jpg - Converts towards photos with many colors and without transparency
+    #[clap(visible_alias = "jpg", visible_alias = "photo")]
+    Photo {
+        /// Strip the file of metadata
+        #[clap(short, long)]
+        strip: bool,
+
+        /// Resize the image to fit inside an area.
+        ///
+        /// See --resize-size to change the default area.
+        #[clap(short, long)]
+        resize: bool,
+
+        /// Resize the image to fit inside a given area.
+        ///
+        /// <https://imagemagick.org/script/command-line-options.php#resize>
+        #[clap(long, value_hint = ValueHint::Other, default_value = "2000x1000>")]
+        resize_size: String,
+
+        /// Files to be converted
+        #[clap(value_hint = ValueHint::FilePath, value_name = "FILE")]
+        input_files: Vec<PathBuf>,
+    },
+
+    /// png - Compresses pngs
+    #[clap(visible_alias = "png")]
+    Screenshot {
+        /// Strip the file of metadata
+        #[clap(short, long)]
+        strip: bool,
+
+        /// take considerably more effort to get small file size
+        #[clap(short, long)]
+        pedantic: bool,
+
+        /// Files to be converted
+        #[clap(value_hint = ValueHint::FilePath, value_name = "FILE")]
+        input_files: Vec<PathBuf>,
+    },
+
+    /// mp3 - extract or convert to mp3
+    #[clap(visible_alias = "mp3")]
+    Sound {
+        /// Files to be converted
+        #[clap(value_hint = ValueHint::FilePath, value_name = "FILE")]
+        input_files: Vec<PathBuf>,
+    },
+
+    /// ogg - extract or convert to opus encoded audio file
+    #[clap(visible_alias = "ogg")]
+    Opus {
+        /// Files to be converted
+        #[clap(value_hint = ValueHint::FilePath, value_name = "FILE")]
+        input_files: Vec<PathBuf>,
+    },
+
+    /// mp4 - convert to mp4 video
+    #[clap(visible_alias = "mp4")]
+    Video {
+        /// Files to be converted
+        #[clap(value_hint = ValueHint::FilePath, value_name = "FILE")]
+        input_files: Vec<PathBuf>,
+    },
+
+    /// mp4 - extract or convert to mp4 videos without sound
+    #[clap(visible_alias = "gif")]
+    Gifish {
+        /// Files to be converted
+        #[clap(value_hint = ValueHint::FilePath, value_name = "FILE")]
+        input_files: Vec<PathBuf>,
+    },
 }
 
 #[test]
 fn verify() {
-    build().debug_assert();
+    use clap::CommandFactory;
+    Cli::command().debug_assert();
 }

@@ -3,7 +3,10 @@
 use std::path::{Path, PathBuf};
 use std::process::exit;
 
+use clap::Parser;
 use command::Command;
+
+use crate::cli::SubCommand;
 
 mod cli;
 mod command;
@@ -11,11 +14,11 @@ mod output_path;
 
 #[allow(clippy::too_many_lines)]
 fn main() {
-    let matches = cli::build().get_matches();
-    let dry_run = matches.contains_id("dry run");
+    let matches = cli::Cli::parse();
+    let dry_run = matches.dry_run;
 
-    let commands = match matches.subcommand().expect("expected a subcommand") {
-        ("versions", _) => {
+    let commands = match matches.subcommand {
+        SubCommand::Versions => {
             println!("Check versions of all tools used...");
             check_version("convert", &["--version"]);
             check_version("ffmpeg", &["-version"]);
@@ -23,18 +26,15 @@ fn main() {
             check_version("oxipng", &["--version"]);
             exit(0);
         }
-        ("photo", matches) => {
-            let strip = matches.contains_id("strip");
-            let input_files = get_input_files(matches);
-
-            let resize = if matches.contains_id("resize") {
-                matches.get_one::<String>("resize size")
-            } else {
-                None
-            };
-
+        SubCommand::Photo {
+            strip,
+            input_files,
+            resize,
+            resize_size,
+        } => {
+            check_input_files(&input_files);
             let mut result = Vec::new();
-            for file in input_files {
+            for file in &input_files {
                 let output = output_path::parse(file, "jpg").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -47,9 +47,9 @@ fn main() {
                     command.arg("-strip");
                 }
 
-                if let Some(resize) = resize {
+                if resize {
                     command.arg("-resize");
-                    command.arg(resize);
+                    command.arg(&resize_size);
                 }
 
                 command.args(&["-quality", "85"]);
@@ -60,13 +60,14 @@ fn main() {
 
             result
         }
-        ("screenshot", matches) => {
-            let pedantic = matches.contains_id("pedantic");
-            let strip = matches.contains_id("strip");
-            let input_files = get_input_files(matches);
-
+        SubCommand::Screenshot {
+            strip,
+            input_files,
+            pedantic,
+        } => {
+            check_input_files(&input_files);
             let mut result = Vec::new();
-            for file in input_files {
+            for file in &input_files {
                 let output = output_path::parse(file, "png").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -89,9 +90,10 @@ fn main() {
 
             result
         }
-        ("sound", matches) => {
+        SubCommand::Sound { input_files } => {
+            check_input_files(&input_files);
             let mut result = Vec::new();
-            for file in get_input_files(matches) {
+            for file in &input_files {
                 let output = output_path::parse(file, "mp3").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -108,9 +110,10 @@ fn main() {
 
             result
         }
-        ("opus", matches) => {
+        SubCommand::Opus { input_files } => {
+            check_input_files(&input_files);
             let mut result = Vec::new();
-            for file in get_input_files(matches) {
+            for file in &input_files {
                 let output = output_path::parse(file, "ogg").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -128,9 +131,10 @@ fn main() {
 
             result
         }
-        ("video", matches) => {
+        SubCommand::Video { input_files } => {
+            check_input_files(&input_files);
             let mut result = Vec::new();
-            for file in get_input_files(matches) {
+            for file in &input_files {
                 let output = output_path::parse(file, "mp4").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -146,9 +150,10 @@ fn main() {
 
             result
         }
-        ("gif-ish", matches) => {
+        SubCommand::Gifish { input_files } => {
+            check_input_files(&input_files);
             let mut result = Vec::new();
-            for file in get_input_files(matches) {
+            for file in &input_files {
                 let output = output_path::parse(file, "mp4").expect("failed to create output path");
                 create_and_add_output_mkdir(&mut result, &output);
 
@@ -164,10 +169,6 @@ fn main() {
             }
 
             result
-        }
-        (name, matches) => {
-            println!("Args: {:?}\n", matches);
-            todo!("output target {}", name);
         }
     };
 
@@ -194,39 +195,31 @@ fn main() {
     }
 }
 
-fn get_input_files(matches: &clap::ArgMatches) -> Vec<&PathBuf> {
-    let all = matches
-        .get_many::<PathBuf>("input files")
-        .expect("couldnt read input files from command line")
-        .collect::<Vec<_>>();
-    for path in &all {
-        check_input_file(path);
-    }
-    all
-}
+fn check_input_files(paths: &[PathBuf]) {
+    for path in paths {
+        let path = path;
+        assert!(
+            !path.is_absolute(),
+            "Absolute path is not supported: {:?}",
+            path
+        );
 
-fn check_input_file(path: &PathBuf) {
-    assert!(
-        !path.is_absolute(),
-        "Absolute path is not supported: {:?}",
-        path
-    );
+        assert!(
+            path.is_file(),
+            "Input file needs to be a valid existing file: {:?}",
+            path
+        );
 
-    assert!(
-        path.is_file(),
-        "Input file needs to be a valid existing file: {:?}",
-        path
-    );
-
-    match path.to_str() {
-        Some(path) => {
-            assert!(
-                !path.contains("../"),
-                "Paths need to be relative below the work directory: {:?}",
-                path
-            );
+        match path.to_str() {
+            Some(path) => {
+                assert!(
+                    !path.contains("../"),
+                    "Paths need to be relative below the work directory: {:?}",
+                    path
+                );
+            }
+            None => panic!("Only valid utf8 paths are supported: {:?}", path),
         }
-        None => panic!("Only valid utf8 paths are supported: {:?}", path),
     }
 }
 
